@@ -15,14 +15,7 @@ def initUserInput():
         userChoice = input()
         
         if userChoice == '1':
-            print('Here is the list of recipes you\'ve created.')
-            recipeList = listRecipes()
-            for recipe in recipeList:
-                print(recipe)
-            
-            print('Type in the exact name of the file you would like to view including filetype.')
-            viewSpecRecipe(recipeList)
-            
+            userChoiceOne()
             invalidEntry = False
             
         elif userChoice == '2':
@@ -32,21 +25,66 @@ def initUserInput():
         elif userChoice == '3':
             print('You entered 3.')
             invalidEntry = False
+            
         else:
             print('You didn\'t enter a valid character, please try again.')
 
+    moreInput = True
+    while moreInput:
+        userInput = input('Is there anything else you\'d like to do today? (yes/no)\n')
+        moreInput = moreAction(userInput)
+    
+# If user inputs option one
+def userChoiceOne():
+            print('Here is the list of recipes you\'ve created.')
+            recipeList = listRecipes()
+            for recipe in recipeList:   # pretty print recipe file names
+                print(recipe)
+            
+            print('Type in the exact name of the file you would like to view including filetype.')
+            viewSpecRecipe(recipeList)  # prints individual recipe file info
+            
+
+# returns list of filenames (e.g. recipes) in the recipe repository
 def listRecipes():
     for folderName, subfolders, filenames in os.walk('recipe_repo'):
         return filenames
 
+# prints relevant info from recipe file
 def viewSpecRecipe(recipeList):
+    
     while True:
-        recipeNameInput = input()
-        if (recipeNameInput) not in recipeList:
+        recipeNameInput = input().strip()
+        
+        if (recipeNameInput) not in recipeList:     # checks user input recipe for existance in recipe_repo
             print('What you entered isn\'t a valid recipe. Please enter a recipe name again.')
+
+        # prints out info from selected recipe file    
         else:
-            print('You did it!')
+            recipeFile = open('recipe_repo\\' + recipeNameInput)
+            recipeReader = csv.reader(recipeFile)
+
+            calorieSum = 0
+            for row in recipeReader:
+                print(row[0] + ' - ' + row[1] + ' - ' + row[3] + ' calories') # row[0] = ingredient name, row[1] = amount, row[3] = calories for ingredient
+                calorieSum += float(row[3]) # row[3] = total calories for a single ingredient
+            print('Total calories: ' + str(calorieSum))
+            recipeFile.close()
             break
+
+
+def moreAction(userInput):
+        if userInput == 'no':
+            return False
+        
+        elif userInput == 'yes':
+            print('Enter 1 to view the list of existing recipes.\n' \
+                  'Enter 2 to add a new recipe.\n'
+                  'Enter 3 to search for a recipe by ingredient.')
+            initUserInput()
+        else:
+            print('You didn\'t input a valid entry.')
+            return True
 
 introduction()
 initUserInput()
