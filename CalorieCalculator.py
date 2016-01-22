@@ -18,6 +18,7 @@ recipeWriter = csv.writer(recipeOutFile)
 # Read ingredient from appropriate cell
 
 next(recipeReader) # skip the header row
+calorieSum = 0 # total sum of calories
 for row in recipeReader:
     ingredient = row[0]
 
@@ -31,19 +32,23 @@ for row in recipeReader:
 
 # Scrape number of calories from google search
 
-    caloriesInt = str(caloriesFromGoogle[0].text.split(' ', 1)[0]) # strip 'calories' from selected string
+    caloriesInt = caloriesFromGoogle[0].text.split(' ', 1)[0] # strip 'calories' from selected string
     
     
-# Write the cell next to next to ingredient
+# Write the cell next to next to ingredient and multiply by serving size
 
     row[2] = caloriesInt
+    servingMultiplier = float(row[1].split(' ', 1)[0]) # column 3
+    row[3] = int(caloriesInt) * servingMultiplier
     recipeWriter.writerow(row)
+
+# Sum calories of ingredients
+
+    calorieSum += row[3]
 
 # Close files
 
 recipeInFile.close()
 recipeOutFile.close()
 
-# TODO - Multiply calorie amount by serving size
-
-# TODO - Sum calories of ingredients
+print(calorieSum)
