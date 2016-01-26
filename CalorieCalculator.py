@@ -1,40 +1,36 @@
 import bs4, csv, os, requests
 
+optionPaths = 'Enter 1 to view the list of existing recipes.\nEnter 2 to add a new recipe.\nEnter 3 to search for a recipe by ingredient.'
+
 def introduction():
-    os.chdir('c:\\users\\ndpayne\\calorieScraper')
+    os.chdir('c:\\users\\ndpayne\\calorieScraper\\recipe_repo')
 
-    print('Hello! Welcome to your recipe program.\n\n' \
-          'Enter 1 to view the list of existing recipes.\n' \
-          'Enter 2 to add a new recipe.\n'
-          'Enter 3 to search for a recipe by ingredient.')
+    print('Hello! Welcome to your recipe program.\n\n' + optionPaths)
 
+# option path tree
 def initUserInput():
-    
     invalidEntry = True
     while invalidEntry:
         userChoice = input()
-        
         if userChoice == '1':
             userChoiceOne()
             invalidEntry = False
-            
         elif userChoice == '2':
-            print('You entered 2.')
-            invalidEntry = False
-            
+            userChoiceTwo()
+            invalidEntry = False 
         elif userChoice == '3':
             print('You entered 3.')
             invalidEntry = False
-            
         else:
             print('You didn\'t enter a valid character, please try again.')
+            continue
 
-    moreInput = True
-    while moreInput:
-        userInput = input('Is there anything else you\'d like to do today? (yes/no)\n')
-        moreInput = moreAction(userInput)
-    
-# If user inputs option one
+        moreAction() # checks whether user wants to re-enter path 1/2/3 after branch completion
+
+        
+##########################
+        
+# If user inputs option one (view list of recipes --> view single recipe)
 def userChoiceOne():
             print('Here is the list of recipes you\'ve created.')
             recipeList = listRecipes()
@@ -42,26 +38,24 @@ def userChoiceOne():
                 print(recipe)
             
             print('Type in the exact name of the file you would like to view including filetype.')
-            viewSpecRecipe(recipeList)  # prints individual recipe file info
+            viewSpecRecipe(recipeList)  # prints individual recipe file info that user selects
             
 
 # returns list of filenames (e.g. recipes) in the recipe repository
 def listRecipes():
-    for folderName, subfolders, filenames in os.walk('recipe_repo'):
+    for folderName, subfolders, filenames in os.walk('.'):
         return filenames
 
 # prints relevant info from recipe file
 def viewSpecRecipe(recipeList):
-    
     while True:
-        recipeNameInput = input().strip()
-        
+        recipeNameInput = input()
         if (recipeNameInput) not in recipeList:     # checks user input recipe for existance in recipe_repo
             print('What you entered isn\'t a valid recipe. Please enter a recipe name again.')
 
         # prints out info from selected recipe file    
         else:
-            recipeFile = open('recipe_repo\\' + recipeNameInput)
+            recipeFile = open(recipeNameInput)
             recipeReader = csv.reader(recipeFile)
 
             calorieSum = 0
@@ -71,25 +65,84 @@ def viewSpecRecipe(recipeList):
             print('Total calories: ' + str(calorieSum))
             recipeFile.close()
             break
+        
+##########################
 
 
-def moreAction(userInput):
+# If user inputs option two (add new recipe)
+def userChoiceTwo():
+    recipeList = listRecipes()
+    createRecipe(recipeList)
+
+def createRecipe(recipeList):
+    recipeName = input('What is the name of your recipe?\n') + '.csv'
+    if recipeName not in recipeList:
+        print('Type the ingredient followed by the amount.\n' \
+              'e.g. Broccoli - 2 heads.\n' \
+              'If you are finished listing ingredients, type \'done\'.')          
+        addIngredients(recipeName)
+
+    else:
+        print('That recipe already exists.')
+
+def addIngredients(recipeName):
+    recipeFile = open(recipeName, 'w', newline='')
+    recipeWriter = csv.writer(recipeFile)
+
+    while True:
+        ingredient = input()
+        if ingredient == 'done':
+            break
+        else:
+            ingredientRow = [x.strip() for x in ingredient.split('-')] # 'broccoli - 2 heads' --> ['broccoli', '2 heads']
+            if len(ingredientRow) == 2 and isNumber(ingredientRow[1]): # if list has length two and the second entry is an int or float continue
+                recipeWriter.writerow(ingredientRow) # add row to file
+            else:
+                print('Your entry was invalid, please try again.')
+    recipeFile.close()
+
+
+# test to make sure that amount starts with a number that can be grabbed
+def isNumber(amount):
+    testNumber = amount.split()[0] # .3 heads --> .3
+    try:
+        float(testNumber)
+        return True
+    except ValueError:
+        return False
+
+##########################
+
+# tests whether user wants to start at top of tree again
+# split into two functions because of bug where additional input was required for each recursion back to initUserInput() in def moreActionInput if inputted 'no'
+def moreAction():
+    moreInput = True
+    while moreInput:
+        userInput = input('Is there anything else you\'d like to do today? (yes/no)\n')
+        moreInput = moreActionInput(userInput)
+
+def moreActionInput(userInput):
         if userInput == 'no':
             return False
-        
         elif userInput == 'yes':
-            print('Enter 1 to view the list of existing recipes.\n' \
-                  'Enter 2 to add a new recipe.\n'
-                  'Enter 3 to search for a recipe by ingredient.')
-            initUserInput()
+            print(optionPaths)
+            initUserInput() # restart program
         else:
             print('You didn\'t input a valid entry.')
             return True
+
+##########################
 
 introduction()
 initUserInput()
 
 print('Exiting program.')
+
+
+
+
+
+
 
 '''
 
