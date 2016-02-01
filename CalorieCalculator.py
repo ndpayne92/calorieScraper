@@ -44,8 +44,8 @@ def userChoiceOne():
                 calorieSum = 0
                 for row in recipeReader:
                     # row[0] = ingredient name, row[1] = amount, row[3] = calories for ingredient
-                    print('{} - {} - {} calories'.format(row[0], row[1], row[3]))
-                    calorieSum += float(row[3])
+                    print('{} - {} - {} calories'.format(row[0], row[1], row[2]))
+                    calorieSum += float(row[2])
             print('Total calories: ' + str(calorieSum))
             break
 
@@ -74,10 +74,27 @@ def userChoiceTwo():
                     break
                 else:
                     # turn input into list
-                    ingredientRow = [x.strip() for x in ingredient.split('-')]
+                    ingredientList = [x.strip() for x in ingredient.split('-')]
                     # if list has length two and the second element is an int or float continue
-                    if len(ingredientRow) == 2 and isNumber(ingredientRow[1]):
-                        recipeWriter.writerow(ingredientRow)
+                    if len(ingredientList) == 2 and isNumber(ingredientList[1]):
+                        print('Calculating calorie value...')
+                        # query google for ingredient
+                        googleQuery = requests.get('https://www.google.com/search?q=how+many+calories+in+' + ingredientList[0])
+                        # test to see if real web page
+                        googleQuery.raise_for_status()
+                        # grab selector
+                        googlePageHTML = bs4.BeautifulSoup(googleQuery.text, 'html.parser')
+                        caloriesFromGoogle = googlePageHTML.select('._Oqb')
+                        # convert to just a number
+                        try:
+                            caloriesInt = caloriesFromGoogle[0].text.split(' ', 1)[0]
+                        except:
+                            print('Cannot find ingredient, please enter another.')
+                            continue
+                        servingMultiplier = float(ingredientList[1].split(' ', 1)[0])
+                        ingredientList.append(int(caloriesInt) * servingMultiplier)                    
+                        recipeWriter.writerow(ingredientList)
+                        print('Enter next ingredient.')
                     else:
                         invalidEntry()
     else:
@@ -126,60 +143,3 @@ print('Hello! Welcome to your recipe program.\n\n' + optionPaths)
 initUserInput()
 
 print('Exiting program.')
-
-
-
-
-
-
-
-'''
-
-
-
-# Open recipe file
-
-recipeInFile = open('Dense_Salad_With_Lemon_Honey_Dressing.csv')
-recipeOutFile = open('recipe_repo\\Dense_Salad_With_Lemon_Honey_Dressing.csv', 'w', newline='')
-recipeReader = csv.reader(recipeInFile)
-recipeWriter = csv.writer(recipeOutFile)
-
-# Read ingredient from appropriate cell
-
-next(recipeReader) # skip the header row
-calorieSum = 0 # total sum of calories
-for row in recipeReader:
-    ingredient = row[0]
-
-# Perform google search for ingredient
-
-    googleQuery = requests.get('https://www.google.com/search?q=how+many+calories+in+' + ingredient)
-    googleQuery.raise_for_status() # test to make sure it's a real web page
-    googlePageHTML = bs4.BeautifulSoup(googleQuery.text, 'html.parser')
-    
-    caloriesFromGoogle = googlePageHTML.select('._Oqb')
-
-# Scrape number of calories from google search
-
-    caloriesInt = caloriesFromGoogle[0].text.split(' ', 1)[0] # 65 calories --> 65
-    
-    
-# Write the cell next to next to ingredient and multiply by serving size
-
-    row[2] = caloriesInt
-    servingMultiplier = float(row[1].split(' ', 1)[0]) # column 3
-    row[3] = int(caloriesInt) * servingMultiplier
-    recipeWriter.writerow(row)
-
-# Sum calories of ingredients
-
-    calorieSum += row[3]
-
-# Close files
-
-recipeInFile.close()
-recipeOutFile.close()
-
-print(calorieSum)
-
-'''
