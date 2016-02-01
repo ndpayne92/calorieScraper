@@ -11,11 +11,12 @@ def initUserInput():
         elif userChoice == '2':
             userChoiceTwo()
         elif userChoice == '3':
-            print('You entered 3.')
+            userChoiceThree()
+        elif userChoice == '4':
+            userChoiceFour()            
         else:
             invalidEntry()
             continue
-        
         # checks whether user wants to re-enter path 1/2/3 after branch completion
         moreAction()
         break
@@ -27,8 +28,7 @@ def userChoiceOne():
     # pretty print recipe file names
     print('Here is the list of recipes you\'ve created.')
     recipeList = listRecipes()
-    for recipe in recipeList:
-        print(recipe)
+    prettyRecipeList(recipeList)
 
     print('Type in the name of the recipe you would like to view.')
     # prints individual recipe file info that user selects 
@@ -54,6 +54,10 @@ def listRecipes():
     for folderName, subfolders, filenames in os.walk('.'):
         prettyFiles = [filename.split('.csv')[0] for filename in filenames]
     return prettyFiles
+
+def prettyRecipeList(recipeList):
+    for recipe in recipeList:
+        print(recipe)    
         
 ############################        
 #### Option 2 functions ####
@@ -85,7 +89,7 @@ def userChoiceTwo():
                         # grab selector
                         googlePageHTML = bs4.BeautifulSoup(googleQuery.text, 'html.parser')
                         caloriesFromGoogle = googlePageHTML.select('._Oqb')
-                        # convert to just a number
+                        # element may exist but not contain useful data
                         try:
                             caloriesInt = caloriesFromGoogle[0].text.split(' ', 1)[0]
                         except:
@@ -101,7 +105,7 @@ def userChoiceTwo():
         print('That recipe already exists.')
         userChoiceTwo()
 
-# test to make sure that amount starts with a number
+# test to make sure that the ingredient amount starts with a number
 def isNumber(amount):
     testNumber = amount.split()[0]
     try:
@@ -110,7 +114,42 @@ def isNumber(amount):
     except ValueError:
         return False
 
-##########################
+############################        
+#### Option 3 functions ####
+############################
+def userChoiceThree():
+    print('Here is the list of recipes you\'ve created.')
+    recipeList = listRecipes()
+    for recipe in recipeList:
+        print(recipe)    
+    removeRecipe = input('What is the name of the recipe you\'d like to remove?\n')
+    os.remove(removeRecipe + '.csv')
+    print('File successfully removed.')
+
+############################        
+#### Option 4 functions ####
+############################
+def userChoiceFour():
+    searchIngredient = input('What is the ingredient you are searching for?\n')
+    recipeList = listRecipes()
+    matchedRecipe = []
+    for recipe in recipeList:
+      with open(recipe + '.csv', newline='') as recipeFile:
+            recipeReader = csv.reader(recipeFile)
+            for row in recipeReader:
+                if searchIngredient.lower() == row[0].lower():
+                    matchedRecipe.append(recipe)
+    if len(matchedRecipe) > 0:
+        print('Here are the recipes which use that ingredient:')
+        for recipe in matchedRecipe:
+            print(recipe)
+    else:
+        print('No matches found.')
+
+    
+############################        
+#### Related to control ####
+############################
 
 # tests whether user wants to start at top of tree again
 def moreAction():
@@ -118,6 +157,7 @@ def moreAction():
         userInput = input('Is there anything else you\'d like to do today? (yes/no)\n')
         if not moreActionInput(userInput):
             break
+        
 def moreActionInput(userInput):
         if userInput == 'no':
             return False
@@ -132,14 +172,13 @@ def invalidEntry():
     print('Invalid entry, please try again.')
 
 ##########################
-
-
-optionPaths = 'Enter 1 to view the list of existing recipes.\n'\
-              'Enter 2 to add a new recipe.\n'\
-              'Enter 3 to search for a recipe by ingredient.'
+########## Main ##########   
+##########################    
+optionPaths = 'Enter 1 to view a recipe.\n'\
+              'Enter 2 to add a recipe.\n'\
+              'Enter 3 to remove a recipe.\n'\
+              'Enter 4 to search for a recipe by ingredient.'
 os.chdir('c:\\users\\ndpayne\\calorieScraper\\recipe_repo')
 print('Hello! Welcome to your recipe program.\n\n' + optionPaths)
-
 initUserInput()
-
 print('Exiting program.')
